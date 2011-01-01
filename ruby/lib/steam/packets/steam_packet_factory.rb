@@ -1,7 +1,7 @@
 # This code is free software; you can redistribute it and/or modify it under the
 # terms of the new BSD License.
 #
-# Copyright (c) 2008-2010, Sebastian Staudt
+# Copyright (c) 2008-2011, Sebastian Staudt
 
 require 'zlib'
 
@@ -19,6 +19,8 @@ require 'steam/packets/a2s_serverquery_getchallenge_packet'
 require 'steam/packets/s2c_challenge_packet'
 require 'steam/packets/a2m_get_servers_batch2_packet'
 require 'steam/packets/m2a_server_batch_packet'
+require 'steam/packets/m2c_isvalidmd5_packet'
+require 'steam/packets/m2s_requestrestart_packet'
 require 'steam/packets/rcon/rcon_goldsrc_response'
 
 module SteamPacketFactory
@@ -55,6 +57,10 @@ module SteamPacketFactory
         return A2M_GET_SERVERS_BATCH2_Packet.new(data)
       when SteamPacket::M2A_SERVER_BATCH_HEADER
         return M2A_SERVER_BATCH_Packet.new(data)
+      when SteamPacket::M2C_ISVALIDMD5_HEADER
+        return M2C_ISVALIDMD5_Packet.new(data)
+      when SteamPacket::M2S_REQUESTRESTART_HEADER
+        return M2S_REQUESTRESTART_Packet.new(data)
       when SteamPacket::RCON_GOLDSRC_CHALLENGE_HEADER,
            SteamPacket::RCON_GOLDSRC_NO_CHALLENGE_HEADER,
            SteamPacket::RCON_GOLDSRC_RESPONSE_HEADER
