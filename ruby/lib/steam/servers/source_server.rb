@@ -18,10 +18,10 @@ class SourceServer
   attr_reader :local_host, :local_port
 
   def initialize(remote_host, remote_port = 27015, local_host = nil, local_port = nil)
-    super remote_host, remote_port
-    @local_host, @local_port = local_host, local_port
-    
-    @socket = SourceSocket.new host, port
+    super remote_host, remote_port, local_host, local_port
+
+    @socket = SourceSocket.new host, port, local_host, local_port
+    @socket.connect
   end
   
   def rcon_connect(password = nil)

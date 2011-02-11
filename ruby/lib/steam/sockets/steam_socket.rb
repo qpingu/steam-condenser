@@ -24,9 +24,14 @@ module SteamSocket
   
   @timeout = 1000
 
-  def initialize(ip, port = 27015)
+  def initialize(remote_host, remote_port = 27015, local_host = nil, local_port = nil)
+    @host, @port, @local_host, @local_port = remote_host, remote_port, local_host, local_port
+  end
+  
+  def connect
     @socket = UDPSocket.new
-    @socket.connect ip, port
+    @socket.bind @local_host, @local_port if @local_host
+    @socket.connect @host, @port
   end
 
   # Closes the underlying socket

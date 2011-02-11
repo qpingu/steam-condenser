@@ -15,7 +15,7 @@ class RCONSocket
   include SteamSocket
 
   def initialize(remote_host, remote_port, local_host = nil, local_port = nil)
-    @host, @port, @local_host, @local_port = remote_host, remote_port, local_host, local_port
+    super remote_host, remote_port, local_host, local_port
   end
 
   def connect

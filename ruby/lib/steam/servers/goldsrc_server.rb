@@ -12,11 +12,12 @@ class GoldSrcServer
   attr_reader :hltv
 
   # Should reorder arguments
-  def initialize(remote_host, remote_port = 27015, is_hltv = false)
-    super remote_host, remote_port
+  def initialize(remote_host, remote_port = 27015, local_host = nil, local_port = nil, is_hltv = false)
+    super remote_host, remote_port, local_host, local_port
     @hltv = is_hltv
     
-    @socket = GoldSrcSocket.new host, port, hltv
+    @socket = GoldSrcSocket.new host, port, local_host, local_port, hltv
+    @socket.connect
   end
   
   def rcon_auth(password)

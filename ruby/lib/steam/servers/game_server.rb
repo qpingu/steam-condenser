@@ -20,12 +20,12 @@ module GameServer
   REQUEST_PLAYER = 2
   REQUEST_RULES = 3
   
-  attr_reader :host, :port
+  attr_reader :host, :port, :local_host, :local_port
 
-  def initialize(remote_host, remote_port = 27015)
+  def initialize(remote_host, remote_port = 27015, local_host = nil, local_port = nil)
     raise ArgumentError.new('The remote port has to be a number greater than 0 and less than 65536.') unless remote_port.to_i > 0 and remote_port.to_i < 65536
     
-    @host, @port, = remote_host, remote_port
+    @host, @port, @local_host, @remote_host = remote_host, remote_port, local_host, local_port
   end
   
   def init
@@ -110,7 +110,7 @@ module GameServer
   end
   
   def rcon_player_info
-    handle_response_for_request GameServer::REQUEST_PLAYER
+    update_player_info
 
     if @player_hash
       players = rcon_exec('status').split("\n")[7..-1]

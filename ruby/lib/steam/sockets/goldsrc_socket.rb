@@ -14,8 +14,8 @@ class GoldSrcSocket
 
   include SteamSocket
 
-  def initialize(ipaddress, port_number = 27015, is_hltv = false)
-    super ipaddress, port_number
+  def initialize(remote_host, remote_port = 27015, local_host = nil, local_port = nil, is_hltv = false)
+    super remote_host, remote_port, local_host, local_port
     @is_hltv = is_hltv
   end
 
