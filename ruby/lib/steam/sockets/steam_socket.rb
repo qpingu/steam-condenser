@@ -34,7 +34,7 @@ module SteamSocket
   end
 
   def receive_packet(buffer_length = 0)
-    if select([@socket], nil, nil, @@timeout / 1000.0).nil?
+    if select([@socket], nil, nil, self.timeout / 1000.0).nil?
       raise TimeoutException
     end
 
