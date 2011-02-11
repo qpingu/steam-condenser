@@ -34,6 +34,7 @@ class RCONTests < Test::Unit::TestCase
       if server.rcon_connect 'test'
         rcon_reply = server.rcon_exec 'cvarlist'
         print "#{rcon_reply}\n"
+        server.rcon_disconnect
       end
 
       assert(
@@ -65,6 +66,7 @@ class RCONTests < Test::Unit::TestCase
       if server.rcon_connect 'test'
         rcon_reply = server.rcon_exec 'version'
         print "#{rcon_reply}\n"
+        server.rcon_disconnect
       end
 
       assert(

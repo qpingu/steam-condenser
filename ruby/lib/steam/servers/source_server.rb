@@ -29,6 +29,11 @@ class SourceServer
     rcon_auth(password) if password
     true
   end
+  
+  def rcon_disconnect
+    @rcon_socket.close if @rcon_socket
+    @rcon_socket = nil
+  end
 
   def rcon_auth(password)
     rcon_connect unless @rcon_socket # for compability with older versions

@@ -20,8 +20,9 @@ require 'exceptions/timeout_exception'
 module SteamSocket
   class << self
     attr_accessor :timeout
-    @timeout = 1000
   end
+  
+  @timeout = 1000
 
   def initialize(ip, port = 27015)
     @socket = UDPSocket.new
@@ -34,7 +35,7 @@ module SteamSocket
   end
 
   def receive_packet(buffer_length = 0)
-    if select([@socket], nil, nil, self.timeout / 1000.0).nil?
+    if select([@socket], nil, nil, SteamSocket.timeout / 1000.0).nil?
       raise TimeoutException
     end
 

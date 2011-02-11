@@ -20,7 +20,7 @@ class RCONSocket
 
   def connect
     begin
-      timeout(@@timeout / 1000.0) { @socket = TCPSocket.new @host, @port, @local_host, @local_port }
+      timeout(SteamSocket.timeout / 1000.0) { @socket = TCPSocket.new @host, @port, @local_host, @local_port }
     rescue Timeout::Error
       raise TimeoutException
     end
