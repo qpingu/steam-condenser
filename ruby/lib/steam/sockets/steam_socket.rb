@@ -3,7 +3,6 @@
 #
 # Copyright (c) 2008-2011, Sebastian Staudt
 
-require 'ipaddr'
 require 'socket'
 
 require 'stringio_additions'
@@ -25,8 +24,6 @@ module SteamSocket
   end
 
   def initialize(ip, port = 27015)
-    ip = IPSocket.getaddress(ip) unless ip.is_a? IPAddr
-
     @socket = UDPSocket.new
     @socket.connect ip, port
   end
@@ -60,5 +57,4 @@ module SteamSocket
 
     @socket.send data_packet.to_s, 0
   end
-
 end
