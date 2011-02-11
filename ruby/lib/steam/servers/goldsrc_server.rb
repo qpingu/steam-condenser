@@ -7,9 +7,27 @@ require 'steam/servers/game_server'
 require 'steam/sockets/goldsrc_socket'
 
 class GoldSrcServer
-
   include GameServer
+  
+  attr_reader :hltv
 
+  # Should reorder arguments
+  def initialize(remote_host, remote_port = 27015, is_hltv = false)
+    super remote_host, remote_port
+    @hltv = is_hltv
+    
+    @socket = GoldSrcSocket.new host, port, hltv
+  end
+  
+  def rcon_auth(password)
+    @rcon_password = password
+    true
+  end
+
+  def rcon_exec(command)
+    @socket.rcon_exec(@rcon_password, command).strip
+  end
+  
   # Splits the player status obtained with +rcon status+
   def self.split_player_status(player_status)
     player_data = player_status.match(/# *(\d+) +"(.*)" +(\d+) +(.*)/).to_a[1..-1]
@@ -20,19 +38,4 @@ class GoldSrcServer
     player_data.delete_at(4)
     player_data
   end
-
-  def initialize(ip_address, port_number = 27015, is_hltv = false)
-    super port_number
-    @socket = GoldSrcSocket.new ip_address, port_number, is_hltv
-  end
-
-  def rcon_auth(password)
-    @rcon_password = password
-    true
-  end
-
-  def rcon_exec(command)
-    @socket.rcon_exec(@rcon_password, command).strip
-  end
-
 end

@@ -3,7 +3,6 @@
 #
 # Copyright (c) 2008-2011, Sebastian Staudt
 
-require 'ipaddr'
 require 'socket'
 require 'timeout'
 
@@ -13,20 +12,15 @@ require 'steam/packets/rcon/rcon_packet_factory'
 require 'steam/sockets/steam_socket'
 
 class RCONSocket
-
   include SteamSocket
 
-  def initialize(ip, port)
-    ip = IPSocket.getaddress(ip) unless ip.is_a? IPAddr
-
-    @ip     = ip
-    @port   = port
-    @socket = nil
+  def initialize(remote_host, remote_port, local_host = nil, local_port = nil)
+    @host, @port, @local_host, @local_port = remote_host, remote_port, local_host, local_port
   end
 
   def connect
     begin
-      timeout(@@timeout / 1000.0) { @socket = TCPSocket.new @ip, @port }
+      timeout(@@timeout / 1000.0) { @socket = TCPSocket.new @host, @port, @local_host, @local_port }
     rescue Timeout::Error
       raise TimeoutException
     end
@@ -34,7 +28,6 @@ class RCONSocket
 
   def send(data_packet)
     connect if @socket.nil? || @socket.closed?
-
     super
   end
 
@@ -60,5 +53,4 @@ class RCONSocket
 
     RCONPacketFactory.packet_from_data(packet_data)
   end
-
 end

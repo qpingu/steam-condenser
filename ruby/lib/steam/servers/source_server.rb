@@ -13,38 +13,19 @@ require 'steam/sockets/rcon_socket'
 require 'steam/sockets/source_socket'
 
 class SourceServer
-
   include GameServer
-  
-  attr_reader :ip, :port
 
-  # Splits the player status obtained with +rcon status+
-  def self.split_player_status(player_status)
-    player_data = player_status.match(/# *(\d+) +"(.*)" +(.*)/).to_a[1..-1]
-    player_data[2] = player_data[2].split
-    player_data.flatten!
-    player_data.delete_at(3)
-    player_data
-  end
+  attr_reader :local_host, :local_port
 
-  def initialize(ip_address, port_number = 27015)
-    @ip, @port = ip_address, port_number
-   
-    super port_number
-    @socket = SourceSocket.new ip, port
-    @rcon_socket = nil
+  def initialize(remote_ip, remote_port = 27015, local_host = nil, local_port = nil)
+    super remote_ip, remote_port, local_host, local_port
+    @socket = SourceSocket.new host, port
   end
   
   def rcon_connect(password = nil)
-    @rcon_socket = RCONSocket.new ip, port
-    rcon_auth password if password
-    
-    @rcon_socket != nil
-  end
-  
-  def rcon_disconnect
-    @rcon_socket.close if @rcon_socket
-    @rcon_socket = nil
+    @rcon_socket = RCONSocket.new host, port, local_host, local_port
+    rcon_auth(password) if password
+    true
   end
 
   def rcon_auth(password)
@@ -80,5 +61,14 @@ class SourceServer
     end
 
     response.strip
+  end
+  
+  # Splits the player status obtained with +rcon status+
+  def self.split_player_status(player_status)
+    player_data = player_status.match(/# *(\d+) +"(.*)" +(.*)/).to_a[1..-1]
+    player_data[2] = player_data[2].split
+    player_data.flatten!
+    player_data.delete_at(3)
+    player_data
   end
 end
