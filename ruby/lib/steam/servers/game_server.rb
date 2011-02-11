@@ -22,8 +22,8 @@ module GameServer
   
   attr_reader :host, :port
 
-  def initialize(remote_ip, remote_port = 27015)
-    raise ArgumentError.new('The remote port has to be a number greater than 0 and less than 65536.') unless port_number.to_i > 0 and port_number.to_i < 65536
+  def initialize(remote_host, remote_port = 27015)
+    raise ArgumentError.new('The remote port has to be a number greater than 0 and less than 65536.') unless remote_port.to_i > 0 and remote_port.to_i < 65536
     
     @host, @port, = remote_host, remote_port
   end
