@@ -19,22 +19,9 @@ require 'exceptions/timeout_exception'
 # @see SourceSocket
 # @since sdds
 module SteamSocket
-
-  # The default timeout
-  # @since 0.11.0
-  @@timeout = 1000
-
-  # Sets the timeout for socket operations. This usually only affects timeouts,
-  # i.e. when a server does not respond in time.
-  #
-  # Due to the server-side implementation of the RCON protocol, each RCON
-  # request will also wait this amount of time after execution. So if you need
-  # RCON requests to execute fast, you should set this to a adequatly low
-  # value.
-  #
-  # +timeout+ The amount of milliseconds before a request times out
-  def self.timeout=(timeout)
-    @@timeout = timeout
+  class << self
+    attr_accessor :timeout
+    @timeout = 1000
   end
 
   def initialize(ip, port = 27015)
