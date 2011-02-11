@@ -62,7 +62,7 @@ class RCONTests < Test::Unit::TestCase
   def test_short_rcon_source_server
     assert_nothing_raised do
       server = SourceServer.new IPAddr.new('127.0.0.1')
-      if server.rcon_auth 'test'
+      if server.rcon_connect 'test'
         rcon_reply = server.rcon_exec 'version'
         print "#{rcon_reply}\n"
       end
