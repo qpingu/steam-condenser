@@ -8,6 +8,7 @@ require 'exceptions/rcon_no_connection_exception'
 require 'steam/packets/rcon/rcon_auth_request'
 require 'steam/packets/rcon/rcon_auth_response'
 require 'steam/packets/rcon/rcon_exec_request'
+require 'steam/packets/rcon/rcon_terminator'
 require 'steam/servers/game_server'
 require 'steam/sockets/rcon_socket'
 require 'steam/sockets/source_socket'
@@ -53,7 +54,7 @@ class SourceServer
     raise RCONNoConnectionException.new unless @rcon_socket
     
     @rcon_socket.send RCONExecRequest.new(@rcon_request_id, command)
-    @rcon_socket.send RCONExecRequest.new(@rcon_request_id, nil)
+    @rcon_socket.send RCONTerminator.new(@rcon_request_id)
     response_packets = []
 
     begin
