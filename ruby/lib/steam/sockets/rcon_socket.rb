@@ -18,6 +18,11 @@ class RCONSocket
     super remote_host, remote_port, local_host, local_port
   end
 
+  # Closes the underlying socket if it exists
+  def close
+    super unless @socket.nil?
+  end
+
   def connect
     begin
       timeout(SteamSocket.timeout / 1000.0) { @socket = TCPSocket.new @host, @port, @local_host, @local_port }
