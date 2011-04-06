@@ -64,7 +64,6 @@ class SourceServer
       response_packets << response_packet
     end while response_packet.response.size > 0
 
-
     response = ''
     response_packets.each do |packet|
       response << packet.response

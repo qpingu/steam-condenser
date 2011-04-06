@@ -2,7 +2,7 @@
  * This code is free software; you can redistribute it and/or modify it under
  * the terms of the new BSD License.
  *
- * Copyright (c) 2008-2009, Sebastian Staudt
+ * Copyright (c) 2008-2011, Sebastian Staudt
  */
 
 package com.github.koraktor.steamcondenser.steam.servers;
@@ -12,6 +12,8 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.github.koraktor.steamcondenser.exceptions.SteamCondenserException;
 import com.github.koraktor.steamcondenser.steam.sockets.GoldSrcSocket;
@@ -66,16 +68,4 @@ public class GoldSrcServer extends GameServer {
 		return ((GoldSrcSocket) this.socket).rconExec(this.rconPassword, command).trim();
 	}
 
-	/**
-	 * Splits the player status obtained with "rcon status"
-	 * @param playerStatus
-	 * @return Split player data
-	 */
-	protected ArrayList<String> splitPlayerStatus(String playerStatus) {
-		ArrayList<String> playerData = new ArrayList<String>(Arrays.asList(playerStatus.substring(1).split("\\s+")));
-		playerData.set(0, playerData.get(2));
-		playerData.remove(2);
-		playerData.remove(4);
-		return playerData;
-	}
 }

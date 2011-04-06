@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.github.koraktor.steamcondenser.exceptions.RCONNoAuthException;
 import com.github.koraktor.steamcondenser.exceptions.SteamCondenserException;
@@ -93,14 +95,4 @@ public class SourceServer extends GameServer {
 		return response.trim();
 	}
 
-	/**
-	 * Splits the player status obtained with "rcon status"
-	 * @param playerStatus
-	 * @return Split player data
-	 */
-	protected ArrayList<String> splitPlayerStatus(String playerStatus) {
-		ArrayList<String> playerData = new ArrayList<String>(Arrays.asList(playerStatus.substring(1).split("\\s+")));
-        playerData.remove(3);
-        return playerData;
-	}
 }

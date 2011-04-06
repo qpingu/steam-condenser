@@ -3,7 +3,7 @@
  * This code is free software; you can redistribute it and/or modify it under
  * the terms of the new BSD License.
  *
- * Copyright (c) 2008-2009, Sebastian Staudt
+ * Copyright (c) 2008-2011, Sebastian Staudt
  *
  * @author     Sebastian Staudt
  * @license    http://www.opensource.org/licenses/bsd-license.php New BSD License
@@ -115,26 +115,39 @@ class SteamPlayer
         $this->extended = false;
     }
 
+    /**
+     * Extends a player object with information retrieved from a RCON call to
+     * the status command
+     *
+     * @param string playerData The player data retrieved from
+     *        <code>rcon status</code>
+     * @throws SteamCondenserException
+     */
     public function addInformation($playerData) {
-        $this->extended = true;
-
-        $this->realId  = intval($playerData[0]);
-        $this->steamId = $playerData[2];
-
-        if($playerData[1] != $this->name) {
+        if($playerData['name'] != $this->name) {
             throw new SteamCondenserException('Information to add belongs to a different player.');
         }
 
-        if($this->steamId == 'BOT') {
-            $this->state = $playerData[3];
+        $this->extended = true;
+        $this->realId   = intval($playerData['userid']);
+        if(array_key_exists('state', $playerData)) {
+            $this->state    = $playerData['state'];
         }
-        else {
-            $address = explode(':', $playerData[6]);
-            $this->ipAddress  = $address[0];
-            $this->clientPort = intval($address[1]);
-            $this->loss       = intval($playerData[4]);
-            $this->ping       = intval($playerData[3]);
-            $this->state      = $playerData[5];
+        $this->steamId  = $playerData['uniqueid'];
+
+        if(!$this->isBot()) {
+            $this->loss = intval($playerData['loss']);
+            $this->ping = intval($playerData['ping']);
+
+            if(array_key_exists('data', $playerData)) {
+                $address = explode(':', $playerData['adr']);
+                $this->ipAddress  = $address[0];
+                $this->clientPort = intval($address[1]);
+            }
+
+            if(array_key_exists('rate', $playerData)) {
+                $this->rate = $playerData['rate'];
+            }
         }
     }
 
@@ -193,6 +206,13 @@ class SteamPlayer
     }
 
     /**
+     * @return Returns the rate of this player
+     */
+    public function getRate() {
+        return $this->rate;
+    }
+
+    /**
      * Returns the real ID (as used on the server) of this player
      * @return int
      */
@@ -226,6 +246,14 @@ class SteamPlayer
     public function getSteamId()
     {
         return $this->steamId;
+    }
+
+    /**
+     * Returns whether this player object has extended information
+     * @return boolean
+     */
+    public function isBot() {
+        return $this->steamId == 'BOT';
     }
 
     /**
