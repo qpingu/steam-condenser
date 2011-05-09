@@ -3,7 +3,7 @@
  * This code is free software; you can redistribute it and/or modify it under
  * the terms of the new BSD License.
  *
- * Copyright (c) 2008-2010, Sebastian Staudt
+ * Copyright (c) 2008-2011, Sebastian Staudt
  *
  * @author     Sebastian Staudt
  * @license    http://www.opensource.org/licenses/bsd-license.php New BSD License
@@ -56,6 +56,9 @@ class GameStats {
             case 'l4d2':
                 require_once STEAM_CONDENSER_PATH . 'steam/community/l4d/L4D2Stats.php';
                 return new L4D2Stats($steamId);
+            case 'portal2':
+                require_once STEAM_CONDENSER_PATH . 'steam/community/portal2/Portal2Stats.php';
+                return new Portal2Stats($steamId);
             case 'tf2':
                 require_once STEAM_CONDENSER_PATH . 'steam/community/tf2/TF2Stats.php';
                 return new TF2Stats($steamId);
@@ -71,7 +74,20 @@ class GameStats {
      * @param $gameName
      */
     protected function __construct($steamId, $gameName) {
-        $this->xmlData = new SimpleXMLElement(file_get_contents("http://www.steamcommunity.com/id/$steamId/stats/$gameName?xml=all"));
+        if(is_numeric($steamId)) {
+            $this->steamId64 = $steamId;
+        } else {
+            $this->customUrl = strtolower($steamId);
+        }
+        $this->gameFriendlyName = $gameName;
+
+        $url = $this->getBaseUrl() . '?xml=all';
+
+        $this->xmlData = new SimpleXMLElement(file_get_contents($url));
+
+        if($this->xmlData->error != null && !empty($this->xmlData->error)) {
+            throw new SteamCondenserException((string) $this->xmlData->error);
+        }
 
         $this->privacyState = (string) $this->xmlData->privacyState;
         if($this->isPublic()) {
@@ -121,6 +137,17 @@ class GameStats {
         }
 
         return $this->achievementsDone;
+    }
+
+    /**
+     * @return String
+     */
+    public function getBaseUrl() {
+        if(empty($this->customUrl)) {
+            return "http://steamcommunity.com/profiles/{$this->steamId64}/stats/{$this->gameFriendlyName}";
+        } else {
+            return "http://steamcommunity.com/id/{$this->customUrl}/stats/{$this->gameFriendlyName}";
+        }
     }
 
     /**

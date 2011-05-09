@@ -32,7 +32,7 @@ import com.github.koraktor.steamcondenser.steam.sockets.QuerySocket;
 /**
  * @author Sebastian Staudt
  */
-abstract public class GameServer {
+public abstract class GameServer extends Server {
 
 	private static final int REQUEST_CHALLENGE = 0;
 	private static final int REQUEST_INFO = 1;
@@ -47,6 +47,17 @@ abstract public class GameServer {
 	protected QuerySocket socket;
 
     /**
+     * Creates a new game server instance with the given address and port
+     *
+     * @param address
+     * @param port
+     */
+    protected GameServer(String address, Integer port)
+            throws IOException, SteamCondenserException {
+        super(address, port);
+    }
+
+    /**
      * Parses the player attribute names supplied by +rcon status+
      *
      * @param statusHeader
@@ -55,9 +66,7 @@ abstract public class GameServer {
     private static List<String> getPlayerStatusAttributes(String statusHeader) {
         List<String> statusAttributes = new ArrayList<String>();
         for(String attribute : statusHeader.split("\\s+")) {
-            if(attribute.equals("#")) {
-                statusAttributes.add("id");
-            } else if(attribute.equals("connected")) {
+            if(attribute.equals("connected")) {
                 statusAttributes.add("time");
             } else if(attribute.equals("frag")) {
                 statusAttributes.add("score");
@@ -77,17 +86,29 @@ abstract public class GameServer {
      * @return Split player data
      */
     private static Map<String, String> splitPlayerStatus(List<String> attributes, String playerStatus) {
-        List<String> tmpData = Arrays.asList(playerStatus.substring(1).trim().split("\""));
+        if(!attributes.get(0).equals("userid")) {
+            playerStatus = playerStatus.replaceAll("^\\d+ +", "");
+        }
+
+        int firstQuote = playerStatus.indexOf('"');
+        int lastQuote  = playerStatus.lastIndexOf('"');
+        List<String> tmpData = new ArrayList<String>();
+        tmpData.add(playerStatus.substring(0, firstQuote));
+        tmpData.add(playerStatus.substring(firstQuote + 1, lastQuote));
+        tmpData.add(playerStatus.substring(lastQuote + 1));
+
         List<String> data = new ArrayList<String>();
         data.addAll(Arrays.asList(tmpData.get(0).trim().split("\\s+")));
         data.add(tmpData.get(1));
         data.addAll(Arrays.asList(tmpData.get(2).trim().split("\\s+")));
+        data.remove("");
 
-        if(attributes.size() > data.size() + 1) {
-          data.add(1, null);
-          data.add(4, null);
-          data.add(4, null);
-          data.add(4, null);
+        if(attributes.size() > data.size() && attributes.contains("state")) {
+            data.add(3, null);
+            data.add(3, null);
+            data.add(3, null);
+        } else if(attributes.size() < data.size()) {
+            data.remove(1);
         }
 
         Map<String, String> playerData = new HashMap<String, String>();
@@ -97,18 +118,6 @@ abstract public class GameServer {
 
         return playerData;
     }
-
-	/**
-	 * Checks if the port number is valid
-	 * @param portNumber The port number of the server
-	 * @throws IllegalArgumentException
-	 */
-	protected GameServer(int portNumber)
-			throws IllegalArgumentException {
-		if(portNumber < 0 || portNumber > 65535) {
-			throw new IllegalArgumentException("The listening port of the server has to be a number greater than 0 and less than 65535.");
-		}
-	}
 
 	/**
 	 * @return The response time of this server in milliseconds
@@ -362,7 +371,7 @@ abstract public class GameServer {
 			List<String> players = new ArrayList<String>();
             for(String line : Arrays.asList(this.rconExec("status").split("\n"))) {
                 if(line.startsWith("#") && !line.equals("#end")) {
-                    players.add(line);
+                    players.add(line.substring(1).trim());
                 }
             }
             List<String> attributes = getPlayerStatusAttributes(players.remove(0));

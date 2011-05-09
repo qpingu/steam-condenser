@@ -1,7 +1,7 @@
-# This code is free software; you can redistribute it and/or modify it under the
-# terms of the new BSD License.
+# This code is free software; you can redistribute it and/or modify it under
+# the terms of the new BSD License.
 #
-# Copyright (c) 2008-2010, Sebastian Staudt
+# Copyright (c) 2008-2011, Sebastian Staudt
 
 require 'open-uri'
 require 'rexml/document'
@@ -37,6 +37,9 @@ class GameStats
       when 'l4d2'
         require 'steam/community/l4d/l4d2_stats'
         L4D2Stats.new(steam_id)
+      when 'portal2'
+        require 'steam/community/portal2/portal2_stats'
+        Portal2Stats.new steam_id
       when 'tf2'
         require 'steam/community/tf2/tf2_stats'
         TF2Stats.new(steam_id)
@@ -58,9 +61,12 @@ class GameStats
     url = base_url + '?xml=all'
     @xml_data = REXML::Document.new(open(url, {:proxy => true}).read).root
 
+    error = @xml_data.elements['error']
+    raise SteamCondenserException.new(error.text) unless error.nil?
+
     @privacy_state = @xml_data.elements['privacyState'].text
     if public?
-      @app_id       = @xml_data.elements['game/gameLink'].text.match(/http:\/\/store.steampowered.com\/app\/([1-9][0-9]+)/)[1]
+      @app_id       = @xml_data.elements['game/gameLink'].text.match(/http:\/\/store.steampowered.com\/app\/([1-9][0-9]+)/)[1].to_i
       @custom_url   = @xml_data.elements['player/customURL'].text if @custom_url.nil?
       @game_name    = @xml_data.elements['game/gameName'].text
       @hours_played = @xml_data.elements['stats/hoursPlayed'].text unless @xml_data.elements['stats/hoursPlayed'].nil?

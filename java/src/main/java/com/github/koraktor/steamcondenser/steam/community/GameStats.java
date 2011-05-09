@@ -2,7 +2,7 @@
  * This code is free software; you can redistribute it and/or modify it under
  * the terms of the new BSD License.
  *
- * Copyright (c) 2008-2010, Sebastian Staudt
+ * Copyright (c) 2008-2011, Sebastian Staudt
  */
 
 package com.github.koraktor.steamcondenser.steam.community;
@@ -20,8 +20,9 @@ import com.github.koraktor.steamcondenser.exceptions.SteamCondenserException;
 import com.github.koraktor.steamcondenser.steam.community.css.CSSStats;
 import com.github.koraktor.steamcondenser.steam.community.defense_grid.DefenseGridStats;
 import com.github.koraktor.steamcondenser.steam.community.dods.DoDSStats;
-import com.github.koraktor.steamcondenser.steam.community.l4d.L4DStats;
 import com.github.koraktor.steamcondenser.steam.community.l4d.L4D2Stats;
+import com.github.koraktor.steamcondenser.steam.community.l4d.L4DStats;
+import com.github.koraktor.steamcondenser.steam.community.portal2.Portal2Stats;
 import com.github.koraktor.steamcondenser.steam.community.tf2.TF2Stats;
 
 /**
@@ -64,6 +65,8 @@ public class GameStats {
 			return new L4DStats(steamId);
         } else if(gameName.equals("l4d2")) {
             return new L4D2Stats(steamId);
+        } else if(gameName.equals("portal2")) {
+            return new Portal2Stats(steamId);
 		} else if(gameName.equals("tf2")) {
 			return new TF2Stats(steamId);
 		} else {
@@ -84,17 +87,16 @@ public class GameStats {
 
 	protected void fetch()
 			throws SteamCondenserException {
-		String url;
 		try {
-			if(this.customUrl == null) {
-				url = "http://steamcommunity.com/profile/" + this.steamId64 + "/stats/" + this.gameName;
-			} else {
-				url = "http://steamcommunity.com/id/" + this.customUrl + "/stats/" + this.gameName;
-			}
-            url += "?xml=all";
+            String url = this.getBaseUrl() + "?xml=all";
 
 			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			this.xmlData = parser.parse(url).getDocumentElement();
+
+            NodeList errorNode = this.xmlData.getElementsByTagName("error");
+            if(errorNode.getLength() > 0) {
+                throw new SteamCondenserException(errorNode.item(0).getTextContent());
+            }
 
 			this.privacyState = this.xmlData.getElementsByTagName("privacyState").item(0).getTextContent();
 			if(this.isPublic()) {
@@ -165,6 +167,14 @@ public class GameStats {
      */
     public float getAchievementsPercentage() {
         return (float) this.getAchievementsDone() / this.achievements.size();
+    }
+
+    public String getBaseUrl() {
+        if(this.customUrl == null) {
+            return "http://steamcommunity.com/profiles/" + this.steamId64 + "/stats/" + this.gameName;
+        } else {
+            return "http://steamcommunity.com/id/" + this.customUrl + "/stats/" + this.gameName;
+        }
     }
 
 	public String getGameFriendlyName() {

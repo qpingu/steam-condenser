@@ -13,8 +13,11 @@ require 'steam/packets/s2a_info_base_packet'
 require 'steam/packets/s2a_player_packet'
 require 'steam/packets/s2a_rules_packet'
 require 'steam/packets/s2c_challenge_packet'
+require 'steam/servers/server'
 
 module GameServer
+  include Server
+
   REQUEST_CHALLENGE = 0
   REQUEST_INFO = 1
   REQUEST_PLAYER = 2
@@ -38,8 +41,6 @@ module GameServer
   def self.player_status_attributes(status_header)
     status_header.split.map do |attribute|
       case attribute
-        when '#'
-          :id
         when 'connected'
           :time
         when 'frag'
@@ -52,13 +53,22 @@ module GameServer
 
   # Splits the player status obtained with +rcon status+
   def self.split_player_status(attributes, player_status)
-    data = player_status[1..-1].strip.split '"'
+    player_status.sub! /^\d+ +/, '' if attributes.first != :userid
+
+    first_quote = player_status.index '"'
+    last_quote  = player_status.rindex '"'
+    data = [
+      player_status[0, first_quote],
+      player_status[first_quote + 1..last_quote - 1],
+      player_status[last_quote + 1..-1]
+    ]
     data = [ data[0].split, data[1], data[2].split ]
     data.flatten!
 
-    if attributes.size > data.size + 1
-      data.insert 1, nil
-      data.insert 4, nil, nil, nil
+    if attributes.size > data.size && attributes.include?(:state)
+      data.insert 3, nil, nil, nil
+    elsif attributes.size < data.size
+      data.delete_at 1
     end
 
     player_data = {}
@@ -67,6 +77,13 @@ module GameServer
     end
 
     player_data
+  end
+
+  # Creates a new instance of a game server object
+  #
+  # The port defaults to 27015 for game servers
+  def initialize(address, port = 27015)
+    super
   end
 
   # Returns the last measured response time of this server
@@ -90,6 +107,10 @@ module GameServer
   def players(rcon_password = nil)
     update_player_info(rcon_password) unless @player_hash
     @player_hash
+  end
+
+  def rcon_authenticated?
+    @rcon_authenticated
   end
 
   # Returns a hash of the settings applied on the server. These settings are
@@ -127,6 +148,8 @@ module GameServer
       rcon_auth rcon_password
       players = rcon_exec('status').lines.select do |line|
         line.start_with?('#') && line != "#end\n"
+      end.map do |line|
+        line[1..-1].strip
       end
       attributes = GameServer.player_status_attributes players.shift
 

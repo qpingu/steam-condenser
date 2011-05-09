@@ -17,12 +17,13 @@ require_once STEAM_CONDENSER_PATH . 'steam/packets/A2S_INFO_Packet.php';
 require_once STEAM_CONDENSER_PATH . 'steam/packets/A2S_PLAYER_Packet.php';
 require_once STEAM_CONDENSER_PATH . 'steam/packets/A2S_RULES_Packet.php';
 require_once STEAM_CONDENSER_PATH . 'steam/packets/A2S_SERVERQUERY_GETCHALLENGE_Packet.php';
+require_once STEAM_CONDENSER_PATH . 'steam/servers/Server.php';
 
 /**
  * @package    Steam Condenser (PHP)
  * @subpackage GameServer
  */
-abstract class GameServer {
+abstract class GameServer extends Server {
 
     const REQUEST_CHALLENGE = 0;
     const REQUEST_INFO      = 1;
@@ -68,9 +69,7 @@ abstract class GameServer {
     private static function getPlayerStatusAttributes($statusHeader) {
         $statusAttributes = array();
         foreach(preg_split("/\s+/", $statusHeader) as $attribute) {
-            if($attribute == '#') {
-                $statusAttributes[] = 'id';
-            } else if($attribute == 'connected') {
+            if($attribute == 'connected') {
                 $statusAttributes[] = 'time';
             } else if($attribute == 'frag') {
                 $statusAttributes[] = 'score';
@@ -90,16 +89,31 @@ abstract class GameServer {
      * @return Split player data
      */
     private static function splitPlayerStatus($attributes, $playerStatus) {
-        $data = explode('"', trim(substr($playerStatus, 1)));
+        if($attributes[0] != 'userid') {
+            $playerStatus = preg_replace('/^\d+ +/', '', $playerStatus);
+        }
+
+        $firstQuote = strpos($playerStatus, '"');
+        $lastQuote  = strrpos($playerStatus, '"');
+        $data = array(
+            substr($playerStatus, 0, $firstQuote),
+            substr($playerStatus, $firstQuote + 1, $lastQuote - 1 - $firstQuote),
+            substr($playerStatus, $lastQuote + 1)
+        );
+
         $data = array_merge(
-            preg_split("/\s+/", trim($data[0])),
+            array_filter(preg_split("/\s+/", trim($data[0]))),
             array($data[1]),
             preg_split("/\s+/", trim($data[2]))
         );
+        $data = array_values($data);
 
-        if(sizeof($attributes) > sizeof($data) + 1) {
-            array_splice($data, 1, 0, array(null));
-            array_splice($data, 4, 0, array(null, null, null, null));
+        if(sizeof($attributes) > sizeof($data) &&
+           in_array('state', $attributes)) {
+            array_splice($data, 3, 0, array(null, null, null));
+        } elseif(sizeof($attributes) < sizeof($data)) {
+            unset($data[1]);
+            $data = array_values($data);
         }
 
         $playerData = array();
@@ -111,13 +125,12 @@ abstract class GameServer {
     }
 
     /**
-     * @param InetAddress $serverIP
-     * @param int $portNumber The listening port of the server, defaults to 27015
+     * @param string $address
+     * @param int $portNumber The listening port of the server, defaults to
+     *        27015
      */
-    public function __construct($portNumber = 27015) {
-        if(!is_numeric($portNumber) || $portNumber <= 0 || $portNumber > 65535) {
-            throw new Exception("The listening port of the server has to be a number greater than 0 and less than 65536.");
-        }
+    public function __construct($address, $port = 27015) {
+        parent::__construct($address, $port);
     }
 
     /**
@@ -275,7 +288,7 @@ abstract class GameServer {
             $players = array();
             foreach(explode("\n", $this->rconExec('status')) as $line) {
                 if(strpos($line, '#') === 0 && $line != '#end') {
-                    $players[] = $line;
+                    $players[] = trim(substr($line, 1));
                 }
             }
             $attributes = self::getPlayerStatusAttributes(array_shift($players));

@@ -16,7 +16,7 @@ require 'exceptions/timeout_exception'
 # @see MasterServerSocket
 # @see RCONSocket
 # @see SourceSocket
-# @since sdds
+# @since 0.5.0
 module SteamSocket
   class << self
     attr_accessor :timeout
